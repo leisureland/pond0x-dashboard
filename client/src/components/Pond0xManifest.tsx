@@ -24,7 +24,22 @@ export function Pond0xManifest({ solAddress }: Pond0xManifestProps) {
   const { data: manifest, isLoading, error } = useQuery<Pond0xManifest>({
     queryKey: ['/api/pond0x/manifest', solAddress],
     queryFn: async () => {
-      const response = await fetch(`/api/pond0x/manifest/${solAddress}`);
+  // Call Cary0x API directly for static deployment
+  const response = await fetch(`https://www.cary0x.com/api/manifest/${solAddress}`);
+  if (!response.ok) throw new Error('Failed to fetch Pond0x manifest');
+  const data = await response.json();
+  
+  // Transform the response to match our interface
+  return {
+    swaps: data.swaps || 0,
+    bxSwaps: data.proSwapsBx || 0,
+    hasTwitter: data.hasTwitter || false,
+    badges: data.badges ? data.badges.split(',').filter(Boolean) : [],
+    cope: data.cope || false,
+    isPro: data.isPro || false,
+    proAgo: data.proAgo || 0,
+    walletAddress: solAddress
+  };
       if (!response.ok) throw new Error('Failed to fetch Pond0x manifest');
       return response.json();
     },
