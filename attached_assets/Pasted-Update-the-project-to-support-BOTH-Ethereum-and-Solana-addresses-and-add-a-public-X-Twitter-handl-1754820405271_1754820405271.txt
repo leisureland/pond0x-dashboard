@@ -1,0 +1,38 @@
+Update the project to support BOTH Ethereum and Solana addresses and add a public “X (Twitter) handle resolver” with safe fallbacks.
+
+## 1) Dual-chain input + validation
+- Replace the single wallet field with TWO optional fields:
+  - Ethereum (0x…): validate with `ethers` `isAddress`.
+  - Solana (Base58): validate by constructing `new PublicKey(addr)` from `@solana/web3.js` and round-tripping `toBase58()`.
+- If both fields are empty, route to Results in **demo mode** with demo ETH and SOL addresses.
+- Query params on Results should be `?eth=<addr>&sol=<addr>` (either can be absent).
+
+## 2) Chain-aware mock data (for now)
+- Replace the mock generator with a chain-aware version:
+  - `type Chain = "eth" | "sol"`
+  - `Event = { chain: Chain; type: "swap"|"mine"|"subscription"|"reward"; when: Date; note: string }`
+  - `MOCK_EVENTS_FOR_CHAIN(chain, address)` returns events seeded by the address length + chain salt, and ensure at least one `"subscription"` event.
+- Results page merges events from both chains if both are supplied.
+
+## 3) Charts & UI tweaks
+- Charts/Timeline/Heatmap should accept merged `events`.
+- Add small badges “ETH” and “SOL” in Timeline rows (tiny colored dots), and a filter toggle to show All / ETH / SOL.
+
+## 4) X (Twitter) handle resolver (read-only, best-effort)
+Create `src/shared/socialResolver.ts` that exports:
+```ts
+export type SocialInfo = { platform: "x"; handle: string; source: "pond0x" | "local" | "none" };
+export async function resolveXForWallet(params: { chain: "eth"|"sol"; address: string }): Promise<SocialInfo> {
+  // 1) Try any public Pond0x endpoints if they exist (optional, fail-safe):
+  //    a) JSON API guesses:
+  //       - https://pond0x.com/api/profile?chain=<chain>&address=<address>
+  //       - https://pond0x.com/api/wallet/<chain>/<address>
+  //    b) Public profile pages:
+  //       - https://pond0x.com/profile/<address>
+  // If none work / CORS blocks / parse fails, return { platform: "x", handle: "", source: "none" }.
+
+  // 2) Fallback: check localStorage mapping key `xmap:${params.chain}:${params.address}` for a handle.
+  //    If found, return { platform: "x", handle, source: "local" }.
+
+  // 3) Else return source "none".
+}

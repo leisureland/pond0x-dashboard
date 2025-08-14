@@ -1,0 +1,33 @@
+You are my senior frontend mentor-builder. I’m a non-coder using Replit. Build a **beautiful, mobile‑first, accessible** web app called **Pond0x Community Tools** inspired by Pond0x.com’s vibe (bold type, clean spacing, subtle gradients), but original.
+
+## Guardrails
+- Frontend‑only (Vite + React + TypeScript + Tailwind). No server, no auth, no wallet connect, no private keys.
+- Read‑only: accepts a public wallet address; uses mock data now; add fetch stubs for later.
+- Security: CSP meta tag, strict address validation, zero `dangerouslySetInnerHTML`.
+- Accessibility: keyboard nav, focus states, aria labels for charts, WCAG AA contrast.
+
+## Must‑have pages
+1) **Home** – hero + wallet input, “Try Demo” button.
+2) **Results** – visual wallet timeline + charts (daily/weekly/monthly) using **mock events**: swaps, mines, PondPro subscriptions, rewards. Buttons: copy address, export `.ics` reminder for PondPro renewal.
+3) **Glossary** – 10 starter terms with one‑line plain‑English defs and a practical example.
+
+## Components
+- AddressForm (ethers `isAddress` validation), StatsCards, Charts (react‑chartjs‑2), Timeline (grouped by day), CalendarHeatmap (simple grid).
+- Utilities: `ics.ts` (generate calendar file), `mock.ts` (deterministic mock events), `format.ts` (date/number helpers).
+
+## Design system
+- Tailwind + a tiny token set (spacing 4/6/8/12/16, radius 2xl, shadows md/lg).
+- Type ramp: `text-3xl/2xl/xl/base/sm`.
+- Colors: neutral slate + a blue/green gradient accent. Keep contrasts AA.
+- Motion: small Framer Motion fades on mount; keep subtle.
+
+## Deliverables in this chat
+1) Exact **install commands** for Replit terminal.
+2) **File tree**.
+3) Full code for: `index.html`, `src/main.tsx`, `src/App.tsx`, `src/pages/Home.tsx`, `src/pages/Results.tsx`, `src/pages/Glossary.tsx`, `src/components/*`, `src/lib/*`, `index.css`, `tailwind.config.js`, `postcss.config.js`, and a short `README.md`.
+4) Clear “what to click/run” steps, plus a note on pushing to GitHub and deploying to Vercel later.
+
+## Non‑goals (for now)
+- No real API calls, no charts from live data, no server, no extensions.
+
+When you’re ready, output everything in one response with copy‑pasteable blocks. Keep explanations short.
