@@ -62,7 +62,7 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
     const fetchMiningData = async () => {
       try {
         // Fetch Pond0x manifest to check Pro status
-        const manifestResponse = await fetch(`/api/pond0x/manifest/${solAddress}`);
+        const manifestResponse = await fetch(`https://www.cary0x.com/api/manifest/${solAddress}`);
         let proStatus = false;
         
         if (manifestResponse.ok) {
@@ -71,19 +71,17 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
           setIsPro(proStatus);
         }
 
-        const response = await fetch(`/api/wallet/multi`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ solAddress })
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          // Show mining data for all users
-          setMiningData(data.pond0xData?.mining || null);
-          setHealthData(data.pond0xData?.health?.stats || null);
-          setAiInsights(data.pond0xData?.health?.ai_beta || []);
-        }
+        // Fetch mining data directly from pond0x.com API
+const miningResponse = await fetch(`https://pond0x.com/api/user/${solAddress}`);
+
+if (miningResponse.ok) {
+  const miningApiData = await miningResponse.json();
+  
+  // Set mining data from the direct API response
+  setMiningData(miningApiData.mining || null);
+  setHealthData(miningApiData.health?.stats || null);
+  setAiInsights(miningApiData.health?.ai_beta || []);
+}
       } catch (error) {
         console.error('Error fetching mining data:', error);
       } finally {
