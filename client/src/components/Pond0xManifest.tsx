@@ -24,24 +24,38 @@ export function Pond0xManifest({ solAddress }: Pond0xManifestProps) {
   const { data: manifest, isLoading, error } = useQuery<Pond0xManifest>({
     queryKey: ['/api/pond0x/manifest', solAddress],
     queryFn: async () => {
-  // Call Cary0x API directly for static deployment
-  const response = await fetch(`https://www.cary0x.com/api/manifest/${solAddress}`);
-  if (!response.ok) throw new Error('Failed to fetch Pond0x manifest');
-  const data = await response.json();
-  
-  // Transform the response to match our interface
-  return {
-    swaps: data.swaps || 0,
-    bxSwaps: data.proSwapsBx || 0,
-    hasTwitter: data.hasTwitter || false,
-    badges: data.badges ? data.badges.split(',').filter(Boolean) : [],
-    cope: data.cope || false,
-    isPro: data.isPro || false,
-    proAgo: data.proAgo || 0,
-    walletAddress: solAddress
-  };
-      if (!response.ok) throw new Error('Failed to fetch Pond0x manifest');
-      return response.json();
+      // Use your serverless function instead of direct API call
+      const response = await fetch('/api/wallet/multi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          solAddress: solAddress
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch wallet data');
+      const data = await response.json();
+      
+      // Extract manifest data from your API response
+      const manifestData = data.stats?.pond0xData?.manifest;
+      
+      if (!manifestData) {
+        // Return default manifest if no data found
+        return {
+          swaps: 0,
+          bxSwaps: 0,
+          hasTwitter: false,
+          badges: [],
+          cope: false,
+          isPro: false,
+          proAgo: 999,
+          walletAddress: solAddress
+        };
+      }
+      
+      return manifestData;
     },
     enabled: !!solAddress
   });
@@ -96,7 +110,7 @@ export function Pond0xManifest({ solAddress }: Pond0xManifestProps) {
               </p>
             </div>
             <div className="text-center">
-              <a
+              
                 href="https://cary0x.github.io/docs/info/manifest"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -271,7 +285,6 @@ export function Pond0xManifest({ solAddress }: Pond0xManifestProps) {
             </div>
           )}
         </div>
-
 
       </div>
     </motion.div>
