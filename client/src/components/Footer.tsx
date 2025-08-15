@@ -12,7 +12,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Read-only, public data only. X handles fetched from public pages if available; otherwise kept locally.
+            Read-only, public data only. Twitter verification status checked via Pond0x APIs.
           </p>
           <div className="flex justify-center space-x-6 mt-4 mb-2">
             <Link href="/privacy" className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
