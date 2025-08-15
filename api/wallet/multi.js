@@ -1,4 +1,4 @@
-// api/wallet/multi.js - DEBUG VERSION
+// api/wallet/multi.js - FIXED VERSION with Correct Data Parsing
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -9,127 +9,130 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { solAddress } = req.body;
-    const testAddress = solAddress || 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF';
+    const { address, ethAddress, solAddress, includeEthereum = true } = req.body;
+    const finalSolAddress = solAddress || address;
+    const finalEthAddress = includeEthereum ? (ethAddress || address) : null;
     
-    console.log('🔍 Testing APIs individually...');
+    console.log(`🚀 Processing multi-chain request:`, { finalSolAddress, finalEthAddress });
     
-    const results = {
-      testAddress,
-      apis: {}
-    };
-
-    // Test 1: Cary0x Manifest
-    try {
-      console.log('Testing Cary0x manifest...');
-      const manifestResponse = await fetch(`https://www.cary0x.com/api/manifest/${testAddress}`, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; Pond0xAnalytics/1.0)'
-        }
-      });
+    let ethData = null;
+    let solData = null;
+    let pond0xManifest = null;
+    let pond0xHealth = null;
+    let pond0xMining = null;
+    
+    // Fetch all data in parallel
+    const promises = [];
+    
+    if (finalSolAddress) {
+      console.log(`📡 Fetching Pond0x data for: ${finalSolAddress}`);
       
-      results.apis.caryManifest = {
-        status: manifestResponse.status,
-        ok: manifestResponse.ok,
-        data: manifestResponse.ok ? await manifestResponse.json() : await manifestResponse.text()
-      };
-      console.log('✅ Cary0x manifest result:', results.apis.caryManifest);
-    } catch (error) {
-      results.apis.caryManifest = { error: error.message };
-      console.log('❌ Cary0x manifest failed:', error.message);
-    }
-
-    // Test 2: Pond0x Health
-    try {
-      console.log('Testing Pond0x health...');
-      const healthResponse = await fetch(`https://www.pond0x.com/api/solana/mining/health/${testAddress}`, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; Pond0xAnalytics/1.0)',
-          'Origin': 'https://pond0x.com',
-          'Referer': 'https://pond0x.com/'
-        }
-      });
+      // 1. Cary0x Manifest API (FIXED parsing)
+      promises.push(
+        fetch(`https://www.cary0x.com/api/manifest/${finalSolAddress}`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (compatible; Pond0xAnalytics/1.0)'
+          }
+        })
+        .then(async res => {
+          if (res.ok) {
+            const data = await res.json();
+            console.log('✅ Raw Cary0x manifest data:', data);
+            
+            // FIXED: Parse the actual data structure correctly
+            pond0xManifest = {
+              swaps: data.proSwapsSol || data.swaps || 0,
+              bxSwaps: data.proSwapsBx || 0,
+              hasTwitter: data.hasTwitter || false,
+              badges: data.badges ? data.badges.split(', ').filter(Boolean) : [],
+              cope: data.cope || false,
+              isPro: data.isPro || false,
+              proAgo: data.proAgo === "undefined" ? 999 : parseInt(data.proAgo) || 0,
+              walletAddress: finalSolAddress
+            };
+            console.log('✅ Parsed manifest:', pond0xManifest);
+          } else {
+            console.log('❌ Cary0x manifest failed:', res.status);
+          }
+        })
+        .catch(err => console.error('❌ Manifest fetch error:', err))
+      );
       
-      results.apis.pond0xHealth = {
-        status: healthResponse.status,
-        ok: healthResponse.ok,
-        data: healthResponse.ok ? await healthResponse.json() : await healthResponse.text()
-      };
-      console.log('✅ Pond0x health result:', results.apis.pond0xHealth);
-    } catch (error) {
-      results.apis.pond0xHealth = { error: error.message };
-      console.log('❌ Pond0x health failed:', error.message);
-    }
-
-    // Test 3: Pond0x Mining Session
-    try {
-      console.log('Testing Pond0x mining session...');
-      const miningResponse = await fetch(`https://www.pond0x.com/api/solana/mining/session/${testAddress}`, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (compatible; Pond0xAnalytics/1.0)',
-          'Origin': 'https://pond0x.com',
-          'Referer': 'https://pond0x.com/'
-        }
-      });
+      // 2. Pond0x Health API
+      promises.push(
+        fetch(`https://www.pond0x.com/api/solana/mining/health/${finalSolAddress}`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (compatible; Pond0xAnalytics/1.0)',
+            'Origin': 'https://pond0x.com',
+            'Referer': 'https://pond0x.com/'
+          }
+        })
+        .then(async res => {
+          if (res.ok) {
+            pond0xHealth = await res.json();
+            console.log('✅ Pond0x health data:', pond0xHealth);
+          } else {
+            console.log('❌ Pond0x health failed:', res.status);
+          }
+        })
+        .catch(err => console.error('❌ Health fetch error:', err))
+      );
       
-      results.apis.pond0xMining = {
-        status: miningResponse.status,
-        ok: miningResponse.ok,
-        data: miningResponse.ok ? await miningResponse.text() : await miningResponse.text()
-      };
-      console.log('✅ Pond0x mining result:', results.apis.pond0xMining);
-    } catch (error) {
-      results.apis.pond0xMining = { error: error.message };
-      console.log('❌ Pond0x mining failed:', error.message);
+      // 3. Pond0x Mining Session API
+      promises.push(
+        fetch(`https://www.pond0x.com/api/solana/mining/session/${finalSolAddress}`, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (compatible; Pond0xAnalytics/1.0)',
+            'Origin': 'https://pond0x.com',
+            'Referer': 'https://pond0x.com/'
+          }
+        })
+        .then(async res => {
+          if (res.ok) {
+            const data = await res.text();
+            if (data && data.length > 40) {
+              pond0xMining = {
+                hasActiveMining: true,
+                miningSignature: data,
+                sessionDetails: null
+              };
+              console.log('✅ Mining signature found:', data.substring(0, 20) + '...');
+            } else {
+              pond0xMining = { hasActiveMining: false, miningSignature: null };
+              console.log('❌ No active mining session');
+            }
+          } else {
+            pond0xMining = { hasActiveMining: false, miningSignature: null };
+            console.log('❌ Pond0x mining failed:', res.status);
+          }
+        })
+        .catch(err => {
+          console.error('❌ Mining fetch error:', err);
+          pond0xMining = { hasActiveMining: false, miningSignature: null };
+        })
+      );
+      
+      // 4. Solana blockchain data (simplified for now)
+      promises.push(
+        fetchSolanaDataSimple(finalSolAddress)
+          .then(data => {
+            solData = data;
+            console.log('✅ Solana blockchain data:', solData?.events?.length, 'events');
+          })
+          .catch(err => console.error('❌ Solana blockchain error:', err))
+      );
     }
-
-    // Test 4: Environment Variables
-    results.environment = {
-      hasAlchemy: !!process.env.ALCHEMY_API_KEY,
-      hasHelius: !!process.env.HELIUS_API_KEY,
-      alchemyPreview: process.env.ALCHEMY_API_KEY ? process.env.ALCHEMY_API_KEY.substring(0, 10) + '...' : 'MISSING',
-      heliusPreview: process.env.HELIUS_API_KEY ? process.env.HELIUS_API_KEY.substring(0, 10) + '...' : 'MISSING'
-    };
-
-    console.log('🔍 Full debug results:', results);
-
-    return res.status(200).json({
-      message: 'DEBUG: Individual API test results',
-      debug: results,
-      events: [{
-        id: 'debug_1',
+    
+    // Wait for all promises
+    await Promise.allSettled(promises);
+    
+    // Create events showing real data
+    const allEvents = [
+      ...(solData?.events || []),
+      {
+        id: `pond0x_${Date.now()}`,
         type: 'swap',
-        description: '🔍 Debug mode: Check the debug object for API test results',
-        timestamp: Date.now(),
-        hash: 'debug_hash',
-        chain: 'sol',
-        amount: 1,
-        token: 'SOL',
-        tokenSymbol: 'SOL',
-        tokenName: 'Solana'
-      }],
-      stats: {
-        totalSwaps: results.apis.caryManifest?.data?.swaps || 0,
-        totalValue: 0,
-        miningRewards: 0,
-        pondProStatus: results.apis.caryManifest?.data?.isPro || false,
-        pondProExpiry: null,
-        pond0xData: {
-          manifest: results.apis.caryManifest?.data || null,
-          health: results.apis.pond0xHealth?.data || null,
-          mining: results.apis.pond0xMining?.data || null
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Debug API Error:', error);
-    return res.status(500).json({ 
-      error: 'Debug API failed',
-      message: error.message 
-    });
-  }
-}
+        description: `🎉 Real Pond0x Data Loaded! ${pond0xManifest?.swaps || 0} swaps, ${pond0xManifest?.badges?.length || 0} badges, Pro: ${pond0xManifest?.isPro ? 'YES' : 'NO'}
