@@ -89,52 +89,24 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   const calculatedSwapBoost = miningStats.swapBoost || 0;
   const swapRatio = parseFloat(miningStats.swapRatio || '0');
 
-  // Debug logging
-  console.log('🔍 SwapBoost Debug:', {
-    totalSwaps,
-    miningSessions,
-    isPro,
-    calculatedSwapBoost,
-    pond0xData,
-    miningStats,
-    healthData
-  });
-
-  // Implement authentic Cary0x boost calculator formulas
+  // Implement authentic Cary0x boost calculator formulas with consistent precision
   // Based on https://cary0x.github.io/docs/info/swaps
-  const totalSwapBoost = totalSwaps / 6;
-  const totalSessionBoost = miningSessions * -3;
-  const currentBoost = totalSwapBoost + totalSessionBoost;
+  const totalSwapBoost = Math.round((totalSwaps / 6) * 100) / 100; // Round to 2 decimal places
+  const totalSessionBoost = Math.round((miningSessions * -3) * 100) / 100;
+  const currentBoost = Math.round((totalSwapBoost + totalSessionBoost) * 100) / 100;
 
   // Target calculations - this represents the maximum effective boost cap
   const maxBoost = 615;
   const targetBoost = maxBoost;
   
-  // More debug logging
-  console.log('🧮 Boost Calculations:', {
-    totalSwapBoost,
-    totalSessionBoost,
-    currentBoost,
-    targetBoost
-  });
+  // Calculate swaps needed for 615 with consistent rounding
+  const swapsNeededFor615 = currentBoost >= targetBoost ? 0 : Math.max(0, Math.round((targetBoost - currentBoost) * 6));
   
-  // Calculate swaps needed for 615
-  // If current boost is already at or above 615, no additional swaps needed
-  // Otherwise: (target - current_boost) * 6
-  const swapsNeededFor615 = currentBoost >= targetBoost ? 0 : Math.max(0, Math.ceil((targetBoost - currentBoost) * 6));
+  // Calculate sessions until boost reaches 615 or 0 with consistent rounding
+  const sessionsUntil615 = currentBoost >= targetBoost ? 0 : Math.max(0, Math.round((targetBoost - currentBoost) / 3));
   
-  // Calculate sessions until boost reaches 615 or 0
-  // For sessions until 615: only if current boost is below 615
-  const sessionsUntil615 = currentBoost >= targetBoost ? 0 : Math.max(0, Math.ceil((targetBoost - currentBoost) / 3));
-  
-  // For sessions until 0: current / 3
-  const sessionsUntil0 = Math.max(0, Math.ceil(currentBoost / 3));
-
-  console.log('📊 Final Results:', {
-    swapsNeededFor615,
-    sessionsUntil615,
-    sessionsUntil0
-  });
+  // For sessions until 0: current / 3 with consistent rounding
+  const sessionsUntil0 = Math.max(0, Math.round(currentBoost / 3));
 
   return (
     <motion.div
