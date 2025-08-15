@@ -89,6 +89,17 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   const calculatedSwapBoost = miningStats.swapBoost || 0;
   const swapRatio = parseFloat(miningStats.swapRatio || '0');
 
+  // Debug logging
+  console.log('🔍 SwapBoost Debug:', {
+    totalSwaps,
+    miningSessions,
+    isPro,
+    calculatedSwapBoost,
+    pond0xData,
+    miningStats,
+    healthData
+  });
+
   // Implement authentic Cary0x boost calculator formulas
   // Based on https://cary0x.github.io/docs/info/swaps
   const totalSwapBoost = totalSwaps / 6;
@@ -98,6 +109,14 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   // Target calculations - this represents the maximum effective boost cap
   const maxBoost = 615;
   const targetBoost = maxBoost;
+  
+  // More debug logging
+  console.log('🧮 Boost Calculations:', {
+    totalSwapBoost,
+    totalSessionBoost,
+    currentBoost,
+    targetBoost
+  });
   
   // Calculate swaps needed for 615
   // If current boost is already at or above 615, no additional swaps needed
@@ -110,6 +129,12 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   
   // For sessions until 0: current / 3
   const sessionsUntil0 = Math.max(0, Math.ceil(currentBoost / 3));
+
+  console.log('📊 Final Results:', {
+    swapsNeededFor615,
+    sessionsUntil615,
+    sessionsUntil0
+  });
 
   return (
     <motion.div
