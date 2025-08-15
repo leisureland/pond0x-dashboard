@@ -47,7 +47,7 @@ export default function Home() {
             >
               <h1 className="text-5xl lg:text-7xl font-black mb-6 leading-tight">
                 <span className="bg-gradient-to-r from-slate-900 via-purple-800 to-blue-900 dark:from-white dark:via-purple-200 dark:to-blue-200 bg-clip-text text-transparent">
-                  Sumguy's Unofficial Pond0x Dashboard
+                  Sumguy's Unofficial Pond0x Data Dashboard
                 </span>
               </h1>
               <p className="text-xl text-slate-600 dark:text-slate-400 mb-12 max-w-3xl mx-auto leading-relaxed">Get analytics for the Pond0x ecosystem. Enter your Solana wallet address to see your mining stats, PondPro status, and real-time insights.</p>

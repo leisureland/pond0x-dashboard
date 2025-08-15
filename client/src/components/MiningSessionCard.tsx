@@ -52,36 +52,30 @@ interface MiningSessionCardProps {
 }
 
 export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSessionCardProps) {
-  const [miningData, setMiningData] = useState<MiningData | null>(null);
-  const [healthData, setHealthData] = useState<HealthStats | null>(null);
-  const [aiInsights, setAiInsights] = useState<string[]>([]);
-  const [isPro, setIsPro] = useState<boolean | null>(null);
+  const [apiData, setApiData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMiningData = async () => {
       try {
-        // Fetch Pond0x manifest to check Pro status
-        const manifestResponse = await fetch(`https://www.cary0x.com/api/manifest/${solAddress}`);
-        let proStatus = false;
+        // Use the same /api/wallet/multi endpoint that Pond0xManifest uses
+        const response = await fetch('/api/wallet/multi', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            solAddress: solAddress
+          }),
+        });
         
-        if (manifestResponse.ok) {
-          const manifestData = await manifestResponse.json();
-          proStatus = manifestData.isPro;
-          setIsPro(proStatus);
+        if (!response.ok) {
+          throw new Error(`API responded with status: ${response.status}`);
         }
-
-        // Fetch mining data directly from pond0x.com API
-const miningResponse = await fetch(`https://pond0x.com/api/user/${solAddress}`);
-
-if (miningResponse.ok) {
-  const miningApiData = await miningResponse.json();
-  
-  // Set mining data from the direct API response
-  setMiningData(miningApiData.mining || null);
-  setHealthData(miningApiData.health?.stats || null);
-  setAiInsights(miningApiData.health?.ai_beta || []);
-}
+        
+        const data = await response.json();
+        console.log('✅ Mining API response:', data);
+        setApiData(data);
       } catch (error) {
         console.error('Error fetching mining data:', error);
       } finally {
@@ -108,9 +102,19 @@ if (miningResponse.ok) {
     );
   }
 
+  // Extract data from the API response
+  const miningData = apiData?.miningStats || {};
+  const healthData = apiData?.healthData?.stats || null;
+  const sessionData = apiData?.miningSessionData || null;
+  const aiInsights = apiData?.healthData?.ai_beta || [];
+  const pond0xData = apiData?.pond0xData || {};
 
+  // Check if there's an active mining session based on health data
+  const hasActiveMining = miningData.hasActiveMining;
+  const hasMempool = healthData?.in_mempool > 0;
+  const hasMiningHistory = healthData?.mining_sessions > 0;
 
-  if (!miningData?.hasActiveMining) {
+  if (!hasActiveMining && !hasMempool && !hasMiningHistory) {
     return (
       <motion.div 
         className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-900/90 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-lg"
@@ -120,17 +124,18 @@ if (miningResponse.ok) {
       >
         <div className="text-center">
           <Zap className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Active Mining Session</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Mining Activity</h3>
           <p className="text-slate-600 dark:text-slate-400">
-            No current mining session found for this wallet address.
+            No mining activity found for this wallet address.
           </p>
         </div>
       </motion.div>
     );
   }
 
-  const session = miningData.sessionDetails;
-  const signature = miningData.miningSignature;
+  // Mining session data is now derived from health APIs
+  const session = null; // No longer using hardcoded session data
+  const signature = null;
 
   return (
     <motion.div 
@@ -159,7 +164,7 @@ if (miningResponse.ok) {
             AI Mining Insights
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {aiInsights.map((insight, index) => (
+            {aiInsights.map((insight: string, index: number) => (
               <div key={index} className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-3 border border-purple-200 dark:border-purple-700/50">
                 <p className="text-sm text-purple-800 dark:text-purple-200 font-medium">{insight}</p>
               </div>
@@ -167,127 +172,123 @@ if (miningResponse.ok) {
           </div>
         </div>
       )}
-      {session ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Mining Rig Boost - First */}
-          <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-orange-500" />
-              <h4 className="font-semibold text-slate-900 dark:text-white">Mining Rig Boost</h4>
-            </div>
-            <div className="text-lg font-bold text-orange-600 dark:text-orange-400">
-              {(() => {
-                if (session.boost > 0) return session.boost;
-                if (manifestData && healthData) {
-                  // Calculate boost using authentic Cary0x formula
-                  const totalSwaps = manifestData.swaps || 0;
-                  const miningSessions = healthData.mining_sessions || 0;
-                  const totalSwapBoost = totalSwaps / 6;
-                  const totalSessionBoost = miningSessions * -3;
-                  const calculatedBoost = Math.max(0, Math.round(totalSwapBoost + totalSessionBoost));
-                  // Cap at maximum boost of 615
-                  return Math.min(calculatedBoost, 615);
-                }
-                return 0;
-              })()}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {session.boost > 0 ? 'Live boost from pond0x.com API' : 'Calculated from Cary0x formula (capped at 615)'}
-            </p>
+      {/* Mining Activity Overview - Based on Health Data */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        {/* Mining Rig Boost - BLUE (Mining Data) */}
+        <div className="bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-5 h-5 text-blue-500" />
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100">Mining Rig Boost</h4>
           </div>
-
-          {/* Mining Status - Second */}
-          <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Clock className="w-5 h-5 text-blue-500" />
-              <h4 className="font-semibold text-slate-900 dark:text-white">Mining Status</h4>
-            </div>
-            <div className={`text-lg font-bold ${
-              session.status === 'QUEUED' ? 'text-yellow-600 dark:text-yellow-400' :
-              session.status === 'PROCESSING' ? 'text-blue-600 dark:text-blue-400' :
-              session.status === 'COMPLETED' ? 'text-green-600 dark:text-green-400' :
-              'text-slate-600 dark:text-slate-400'
-            }`}>
-              {session.status}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Current mining status
-            </p>
+          <div className="text-lg font-bold text-orange-600 dark:text-orange-300">
+            {(() => {
+              const totalSwaps = pond0xData?.proSwapsSol || 0;
+              const miningSessions = healthData?.mining_sessions || 0;
+              const totalSwapBoost = totalSwaps / 6;
+              const totalSessionBoost = miningSessions * -3;
+              const currentBoost = totalSwapBoost + totalSessionBoost;
+              const maxBoost = 615;
+              const finalBoost = Math.min(Math.max(currentBoost, 0), maxBoost);
+              return Math.round(finalBoost);
+            })()}
           </div>
-
-          {/* Slashes - Third */}
-          <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-red-500" />
-              <h4 className="font-semibold text-slate-900 dark:text-white">Slashes</h4>
-            </div>
-            <div className={`text-lg font-bold ${
-              session.slashes === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-            }`}>
-              {session.slashes}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Penalty count
-            </p>
-          </div>
-
-          {/* Priority Level - Fourth */}
-          <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-yellow-500" />
-              <h4 className="font-semibold text-slate-900 dark:text-white">Priority Level</h4>
-            </div>
-            <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-              {healthData?.priority !== undefined ? healthData.priority : 'Loading...'}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Mining priority from Cary0x health API </p>
-            <div className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
-              ✓ Live data from cary0x.com/api/health
-            </div>
-          </div>
-
-          {/* Network Peers - Fifth */}
-          <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-purple-500" />
-              <h4 className="font-semibold text-slate-900 dark:text-white">Network Peers</h4>
-            </div>
-            <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-              {formatNumber(session.peers)}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              Active network participants
-            </p>
-          </div>
-
-          {/* Mining Reward - Sixth */}
-          <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-5 h-5 text-green-500" />
-              <h4 className="font-semibold text-slate-900 dark:text-white">Mining Reward</h4>
-            </div>
-            <div className="text-lg font-bold text-green-600 dark:text-green-400">
-              {formatNumber(Math.round(session.reward / 1000000))}M $POND
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              From pond0x.com/api/solana/mining/session
-            </p>
-            <div className="text-xs text-green-600 dark:text-green-400 mt-1 font-medium">
-              Raw: {session.reward.toLocaleString()} units
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-slate-100 dark:bg-slate-700/50 rounded-lg p-6 text-center">
-          <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Mining Session Active</h4>
-          <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Mining signature confirmed, but detailed session data is not available.
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            Calculated using Cary0x formula (capped at 615)
           </p>
-          <code className="bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-200 px-4 py-2 rounded text-sm font-mono break-all">
-            {signature?.substring(0, 40)}...
-          </code>
+          <div className="text-xs text-blue-500 dark:text-blue-300 mt-1 font-medium">
+            ✓ Based on wallet-specific swap and session data
+          </div>
         </div>
-      )}
+
+        {/* Mining Status - BLUE (Mining Data) */}
+        <div className="bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock className="w-5 h-5 text-blue-500" />
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100">Mining Status</h4>
+          </div>
+          <div className={`text-lg font-bold ${
+            hasMempool ? 'text-orange-600 dark:text-orange-300' : 
+            hasMiningHistory ? 'text-orange-600 dark:text-orange-300' : 
+            'text-slate-600 dark:text-slate-400'
+          }`}>
+            {hasMempool ? 'ACTIVE' : hasMiningHistory ? 'HISTORY' : 'INACTIVE'}
+          </div>
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            {hasMempool ? 'Transactions in mempool' : hasMiningHistory ? 'Has mining history' : 'No recent activity'}
+          </p>
+        </div>
+
+        {/* Failed Claims - RED (Issues/Warnings) */}
+        <div className="bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-5 h-5 text-red-500" />
+            <h4 className="font-semibold text-red-900 dark:text-red-100">Failed Claims</h4>
+          </div>
+          <div className={`text-lg font-bold ${
+            (healthData?.failed || 0) === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+          }`}>
+            {healthData?.failed || 0}
+          </div>
+          <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+            Failed transaction count
+          </p>
+          <div className="text-xs text-red-500 dark:text-red-300 mt-1 font-medium">
+            ✓ From pond0x.com health API
+          </div>
+        </div>
+
+        {/* Priority Level - YELLOW (Status/Priority) */}
+        <div className="bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="w-5 h-5 text-yellow-500" />
+            <h4 className="font-semibold text-yellow-900 dark:text-yellow-100">Priority Level</h4>
+          </div>
+          <div className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+            {healthData?.priority !== undefined ? healthData.priority : 'N/A'}
+          </div>
+          <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Mining priority level</p>
+          <div className="text-xs text-yellow-500 dark:text-yellow-300 mt-1 font-medium">
+            ✓ Live data from pond0x.com health API
+          </div>
+        </div>
+
+        {/* Mining Sessions - BLUE (Mining Data) */}
+        <div className="bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Users className="w-5 h-5 text-blue-500" />
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100">Mining Sessions</h4>
+          </div>
+          <div className="text-lg font-bold text-orange-600 dark:text-orange-300">
+            {formatNumber(healthData?.mining_sessions || 0)}
+          </div>
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+            Total mining sessions completed
+          </p>
+          <div className="text-xs text-blue-500 dark:text-blue-300 mt-1 font-medium">
+            ✓ Wallet-specific mining history
+          </div>
+        </div>
+
+        {/* Max Claim Estimate - GREEN (Financial/Rewards) */}
+        <div className="bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-700/50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="w-5 h-5 text-green-500" />
+            <h4 className="font-semibold text-green-900 dark:text-green-100">Max Claim Est.</h4>
+          </div>
+          <div className="text-lg font-bold text-green-600 dark:text-green-400">
+            {healthData?.estimates?.max_claim_estimate_usd ? 
+              formatCurrency(healthData.estimates.max_claim_estimate_usd) : 
+              'N/A'
+            }
+          </div>
+          <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+            Estimated maximum claim value
+          </p>
+          <div className="text-xs text-green-500 dark:text-green-300 mt-1 font-medium">
+            ✓ From pond0x.com health API
+          </div>
+        </div>
+      </div>
       {/* Comprehensive Health Statistics */}
       {healthData && (
         <div className="mt-8 border-t border-slate-200 dark:border-slate-700 pt-6">
@@ -295,7 +296,7 @@ if (miningResponse.ok) {
             <TrendingUp className="w-5 h-5 text-blue-500" />
             Comprehensive Mining Health
             <div className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 px-3 py-1 rounded text-sm font-medium ml-auto">
-              ✓ Cary0x Health API
+              ✓ Pond0x Health API
             </div>
           </h4>
           

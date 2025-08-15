@@ -16,7 +16,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,
-    target: 'es2015',
+    target: 'es2020',
     sourcemap: false,
     minify: 'esbuild',
     assetsDir: 'assets',

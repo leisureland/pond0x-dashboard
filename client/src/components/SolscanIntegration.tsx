@@ -92,7 +92,7 @@ export function SolscanIntegration({ solanaAddress, className = '' }: SolscanInt
             </div>
             Pond0x Scan Data
           </CardTitle>
-          <p className="text-sm text-slate-600 dark:text-slate-400">Direct links to Pond0x-specific transaction history on Solscan (inspired by Cary's Dcan Data)</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Direct links to Pond0x-specific transaction history on Solscan</p>
         </CardHeader>
         
         <CardContent className="space-y-3">

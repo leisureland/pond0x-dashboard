@@ -239,7 +239,7 @@ export default function Results() {
           <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">
             Wallet Analytics Dashboard
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">Data powered by Cary0x and pond0x.com APIs</p>
+          <p className="text-slate-600 dark:text-slate-400">Data powered by Cary0x and Pond0x.com APIs</p>
           
 
         </motion.div>
@@ -341,6 +341,7 @@ export default function Results() {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <SwapBoostCalculator 
+              solAddress={solAddress}
               manifestData={stats?.pond0xData?.manifest}
               healthStats={stats?.pond0xData?.health?.stats}
             />
