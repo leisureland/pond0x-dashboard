@@ -227,7 +227,7 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50/50 via-white to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <motion.div
