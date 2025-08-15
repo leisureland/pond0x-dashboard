@@ -227,14 +227,8 @@ export default function Results() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50/50 via-white to-purple-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950/50">
-      <div className="relative">
-        {/* Background elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-100/20 via-transparent to-transparent dark:from-purple-900/10"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-100/20 to-transparent dark:from-blue-900/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-purple-100/20 to-transparent dark:from-purple-900/10 rounded-full blur-3xl"></div>
-        
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <motion.div
           className="text-center mb-8"
@@ -368,7 +362,6 @@ export default function Results() {
 
         {/* Transaction History section removed - wasn't providing authentic value */}
 
-        </div>
       </div>
     </div>
   );
