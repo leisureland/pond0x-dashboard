@@ -124,8 +124,9 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   const swapsNeededFor615 = currentBoost >= targetBoost ? 0 : Math.max(0, Math.ceil((targetBoost - currentBoost) * 6));
   
   // Calculate sessions until boost reaches 615 or 0
-  // For sessions until 615: only if current boost is below 615
-  const sessionsUntil615 = currentBoost >= targetBoost ? 0 : Math.max(0, Math.ceil((targetBoost - currentBoost) / 3));
+  // For sessions until 615: if current boost is above 615, you can mine (currentBoost - 615) / 3 sessions
+  // while staying at the 615 cap. If current boost is below 615, you can't mine any sessions without going below 615.
+  const sessionsUntil615 = currentBoost <= targetBoost ? 0 : Math.max(0, Math.floor((currentBoost - targetBoost) / 3));
   
   // For sessions until 0: current / 3
   const sessionsUntil0 = Math.max(0, Math.ceil(currentBoost / 3));
