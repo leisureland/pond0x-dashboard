@@ -83,7 +83,7 @@ export default function Home() {
                     >
                       @Cary0x2
                     </a>{" "}
-                    for the data sources and to the{" "}
+                    for the data sources and to {" "}
                     <a 
                       href="https://www.pond0x.com" 
                       target="_blank" 

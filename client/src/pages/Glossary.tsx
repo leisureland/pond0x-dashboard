@@ -17,7 +17,7 @@ export default function Glossary() {
     {
       title: "Cary0x2's Unofficial Pond0x Info",
       description: "Your go-to resource for navigating the multifaceted world of Pond0x! This site is here to demystify the Pond0x ecosystem, offering accurate information, step-by-step guides, and clear answers to common issues.",
-      url: "https://www.cary0x.com",
+      url: "https://cary0x.github.io/",
       icon: User,
       primary: false,
       customIcon: caryProfile
