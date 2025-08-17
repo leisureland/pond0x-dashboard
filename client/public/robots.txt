@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+User-agent: Twitterbot
+Disallow:
+
+Sitemap: https://pond0xdash.com/sitemap.xml
