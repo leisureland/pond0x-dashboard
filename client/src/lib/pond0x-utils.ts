@@ -2,13 +2,29 @@
  * Utility functions for Pond0x data processing
  */
 
-// Badge emoji mapping
+// Badge emoji mapping - Updated with complete Cary0x badge list
 const BADGE_EMOJI_MAP: Record<string, string> = {
   'diamond': '💎',
-  'pork': '🐷',
-  'chef': '👨‍🍳',
+  'void': '🐰',
   'points': '✨',
-  'swap': '🤝'
+  'chef': '👨‍🍳',
+  'pork': '🐷',
+  'stand': '✊',
+  'swap': '🤝',
+  'insider': '🥼',
+  'water': '💧',
+  'king': '👑',
+  'unicorn': '🦄',
+  'miner': '⛏️',
+  'topswap': '🥇',
+  'ygn': '🟪',
+  'slashed': '🤕',
+  'spawner': '🧪',
+  'staker': '🪷',
+  'covid': '💉',
+  'wrapped': '🎁',
+  'quest': '🧩',
+  'recap': '🎁'
 } as const;
 
 /**

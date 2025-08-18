@@ -144,13 +144,20 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
       transition={{ duration: 0.5 }}
       className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-900/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-700/60 p-6"
     >
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="bg-blue-500/20 rounded-xl p-3">
           <Calculator className="w-6 h-6 text-blue-500 dark:text-blue-400" />
         </div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
           Swap/Boost Calculator
         </h3>
+      </div>
+      
+      {/* Disclaimer */}
+      <div className="mb-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg">
+        <p className="text-sm text-amber-800 dark:text-amber-200">
+          ⚠️ The calculation is an approximation and actual boost may vary due to additional factors.
+        </p>
       </div>
       {/* Input Data Summary - Two Separate Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

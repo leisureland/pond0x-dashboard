@@ -81,7 +81,7 @@ export function AddressForm({ onSubmit, onDemo }: AddressFormProps) {
                 type="text"
                 value={solAddress}
                 onChange={handleSolChange}
-                className={`h-14 text-base px-6 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 rounded-xl shadow-sm transition-all duration-200 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 ${solError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
+                className={`h-14 text-base px-6 pr-16 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-2 focus:ring-purple-500/20 dark:focus:ring-purple-400/20 rounded-xl shadow-sm transition-all duration-200 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 ${solError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}`}
                 placeholder="Enter your Solana wallet address"
                 aria-label="Solana wallet address input"
                 data-testid="input-sol-address"
