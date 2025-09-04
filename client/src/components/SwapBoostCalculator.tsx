@@ -22,22 +22,33 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   useEffect(() => {
     const fetchSwapBoostData = async () => {
       try {
-        // Use Cloudflare Worker proxy endpoint
-        const response = await fetch('https://pond0x-api-proxy.pond0xdash.workers.dev/api/wallet/multi', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            solAddress: solAddress
-          }),
-        });
+        const WORKER_BASE_URL = 'https://pond0x-api-proxy.pond0xdash.workers.dev';
         
-        if (!response.ok) {
-          throw new Error(`API responded with status: ${response.status}`);
+        // Fetch manifest data
+        const manifestResponse = await fetch(`${WORKER_BASE_URL}/manifest?id=${solAddress}`);
+        let manifestData = {};
+        if (manifestResponse.ok) {
+          manifestData = await manifestResponse.json();
         }
+
+        // Fetch health data
+        const healthResponse = await fetch(`${WORKER_BASE_URL}/health?id=${solAddress}`);
+        let healthData = {};
+        if (healthResponse.ok) {
+          healthData = await healthResponse.json();
+        }
+
+        // Structure data to match original format
+        const data = {
+          pond0xData: manifestData,
+          miningStats: {
+            sessions: (healthData as any)?.stats?.mining_sessions || 0
+          },
+          healthData: {
+            stats: (healthData as any)?.stats || {}
+          }
+        };
         
-        const data = await response.json();
         console.log('✅ SwapBoost API response:', data);
         setApiData(data);
       } catch (error) {
