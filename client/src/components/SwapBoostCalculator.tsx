@@ -22,8 +22,8 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   useEffect(() => {
     const fetchSwapBoostData = async () => {
       try {
-        // Use the same /api/wallet/multi endpoint
-        const response = await fetch('/api/wallet/multi', {
+        // Use Cloudflare Worker proxy endpoint
+        const response = await fetch('https://pond0x-api-proxy.pond0xdash.workers.dev/api/wallet/multi', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
