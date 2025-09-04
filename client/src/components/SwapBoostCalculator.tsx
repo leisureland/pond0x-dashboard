@@ -92,7 +92,7 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   const healthData = apiData?.healthData?.stats || {};
 
   // Get total swaps and mining sessions from API data
-  const totalSwaps = pond0xData.proSwapsSol || 0;
+  const totalSwaps = (pond0xData.proSwapsSol || 0) + (pond0xData.proSwapsBx || 0);
   const miningSessions = miningStats.sessions || healthData.mining_sessions || 0;
   const isPro = pond0xData.isPro || false;
 
