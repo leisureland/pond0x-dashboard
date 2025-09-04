@@ -50,6 +50,8 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
         };
         
         console.log('✅ SwapBoost API response:', data);
+        console.log('🔍 Manifest data structure:', manifestData);
+        console.log('🔍 Health data structure:', healthData);
         setApiData(data);
       } catch (error) {
         console.error('Error fetching swap boost data:', error);
