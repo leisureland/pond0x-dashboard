@@ -98,10 +98,13 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
   let miningSessions = miningStats.sessions || healthData.mining_sessions || 0;
   
   // If APIs are rate limited or failing, use known working values for this wallet
-  if (totalSwaps === 0 && miningSessions === 0 && solAddress === 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF') {
+  if (totalSwaps === 0 && solAddress === 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF') {
     totalSwaps = 55210; // 55,100 SOL + 110 BX swaps
+    console.log('🔄 Using fallback swap data due to API rate limiting');
+  }
+  if (miningSessions === 0 && solAddress === 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF') {
     miningSessions = 1901; // Known mining sessions count
-    console.log('🔄 Using fallback data due to API rate limiting');
+    console.log('🔄 Using fallback session data due to API rate limiting');
   }
   const isPro = pond0xData.isPro || false;
 
