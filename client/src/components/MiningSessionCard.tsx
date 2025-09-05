@@ -125,6 +125,39 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
   const hasMempool = healthData?.in_mempool > 0;
   const hasMiningHistory = healthData?.mining_sessions > 0;
 
+  // Debug logging to understand what's happening
+  console.log('🔍 Mining Activity Check:', {
+    address: solAddress,
+    apiData: !!apiData,
+    hasActiveMining,
+    hasMempool,
+    hasMiningHistory,
+    healthData: !!healthData,
+    miningSessionsCount: healthData?.mining_sessions,
+    mempoolCount: healthData?.in_mempool
+  });
+
+  // Only show "No Mining Activity" if we have valid API data AND no activity
+  // If apiData is null (API failed), we should show an error state instead
+  if (!apiData) {
+    return (
+      <motion.div 
+        className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-900/90 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-lg"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="text-center">
+          <Zap className="w-12 h-12 text-red-400 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">API Error</h3>
+          <p className="text-slate-600 dark:text-slate-400">
+            Unable to fetch mining data for this wallet address. Please try again later.
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
   if (!hasActiveMining && !hasMempool && !hasMiningHistory) {
     return (
       <motion.div 
