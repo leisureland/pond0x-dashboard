@@ -86,42 +86,9 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
         setApiData(structuredData);
       } catch (error) {
         console.error('Error fetching mining data:', error);
-        // Fallback data for rate-limited scenarios
-        if (solAddress === 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF') {
-          const fallbackData = {
-            healthData: {
-              stats: {
-                mining_sessions: 1916,
-                in_mempool: 1857,
-                sent: 30,
-                failed: 12,
-                drifted: 16,
-                drift_risk: 0,
-                priority: 50,
-                estimates: {
-                  sol_usd: 203.49,
-                  wpond_usd: 1.5165906808955227e-7,
-                  drift_risk_usd: 0,
-                  max_claim_estimate_usd: 159504.17,
-                  drifted_usd: 2398
-                },
-                health: 7
-              },
-              ai_beta: ["Your Rig is 💪. gg.", "You boosted 3x from swapping during the reward window!"]
-            },
-            pond0xData: {
-              proSwapsSol: 55110,
-              proSwapsBx: 110,
-              badges: "diamond, pork, chef, points, swap",
-              hasTwitter: true
-            },
-            miningStats: {
-              hasActiveMining: true
-            }
-          };
-          console.log('🔄 Using fallback data due to API rate limiting');
-          setApiData(fallbackData);
-        }
+        // Log error for debugging but don't use fallback data
+        console.log('⚠️ API Error for address:', solAddress, error);
+        setApiData(null);
       } finally {
         setLoading(false);
       }
@@ -231,28 +198,17 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
               const totalSwaps = totalSwapsSol + totalSwapsBx;
               const miningSessions = healthData?.mining_sessions || 0;
               
-              // Fallback data for specific address when APIs are rate limited
-              let finalTotalSwaps = totalSwaps;
-              let finalMiningSessions = miningSessions;
-              
-              if (totalSwaps === 0 && solAddress === 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF') {
-                finalTotalSwaps = 55220; // 55,110 SOL + 110 BX swaps
-                console.log('🔄 Using fallback swap data due to API rate limiting');
-              }
-              if (miningSessions === 0 && solAddress === 'GPieLbY26GPaje1PDs4s7maUGZNqGQNGm7FzZN3LEoLF') {
-                finalMiningSessions = 1916; // Known mining sessions count
-                console.log('🔄 Using fallback session data due to API rate limiting');
-              }
-              
-              const totalSwapBoost = finalTotalSwaps / 6;
-              const totalSessionBoost = finalMiningSessions * -3;
+              // Calculate Mining Rig Boost using Cary's formula
+              const totalSwapBoost = totalSwaps / 6;
+              const totalSessionBoost = miningSessions * -3;
               const currentBoost = totalSwapBoost + totalSessionBoost;
               const maxBoost = 615;
               const finalBoost = Math.min(Math.max(currentBoost, 0), maxBoost);
               
               console.log('🧮 Mining Rig Boost Calculation:', {
-                totalSwaps: finalTotalSwaps,
-                miningSessions: finalMiningSessions,
+                address: solAddress,
+                totalSwaps,
+                miningSessions,
                 swapBoost: totalSwapBoost,
                 sessionBoost: totalSessionBoost,
                 currentBoost: currentBoost,
