@@ -23,30 +23,27 @@ export function Pond0xManifest({ solAddress }: Pond0xManifestProps) {
   const { data: manifest, isLoading, error } = useQuery<Pond0xManifestData>({
     queryKey: ['/api/pond0x/manifest', solAddress],
     queryFn: async (): Promise<Pond0xManifestData> => {
-      const response = await fetch('/api/wallet/multi', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ solAddress }),
-      });
+      console.log('🔍 Fetching manifest data for:', solAddress);
       
-      if (!response.ok) {
-        throw new Error(`API responded with status: ${response.status}`);
+      // Use Cloudflare Worker proxy endpoints
+      const manifestResponse = await fetch(`https://pond0x-api-proxy.pond0xdash.workers.dev/manifest?id=${solAddress}`);
+      
+      if (!manifestResponse.ok) {
+        throw new Error(`Manifest API responded with status: ${manifestResponse.status}`);
       }
       
-      const data: Pond0xApiResponse = await response.json();
-      const pond0xData = data.pond0xData || {};
+      const manifestData = await manifestResponse.json();
+      console.log('✅ Manifest API response:', manifestData);
       
       return {
-        swaps: pond0xData.proSwapsSol || 0,
-        bxSwaps: pond0xData.proSwapsBx || 0,
-        hasTwitter: pond0xData.hasTwitter || false,
-        badges: parseBadges(pond0xData.badges || ''),
-        cope: pond0xData.cope || false,
-        isPro: pond0xData.isPro || false,
-        proAgo: typeof pond0xData.proAgo === 'number' ? pond0xData.proAgo : 0,
-        proExpiry: pond0xData.proExpiry || undefined,
+        swaps: manifestData.proSwapsSol || 0,
+        bxSwaps: manifestData.proSwapsBx || 0,
+        hasTwitter: manifestData.hasTwitter || false,
+        badges: parseBadges(manifestData.badges || ''),
+        cope: manifestData.cope || false,
+        isPro: manifestData.isPro || false,
+        proAgo: typeof manifestData.proAgo === 'number' ? manifestData.proAgo : 0,
+        proExpiry: manifestData.proExpiry || undefined,
         walletAddress: solAddress
       };
     },

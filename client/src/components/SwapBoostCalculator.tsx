@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Calculator, TrendingUp, Target, ArrowUp, Clock } from 'lucide-react';
+import { Calculator, TrendingUp, Target, ArrowUp, Clock, AlertTriangle } from 'lucide-react';
+import { cachedFetch } from '@/lib/apiCache';
 
 interface SwapBoostCalculatorProps {
   solAddress: string;
@@ -18,25 +19,56 @@ interface SwapBoostCalculatorProps {
 export default function SwapBoostCalculator({ solAddress, manifestData, healthStats }: SwapBoostCalculatorProps) {
   const [apiData, setApiData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [dataStatus, setDataStatus] = useState<{
+    manifestFromCache: boolean;
+    healthFromCache: boolean;
+    manifestIsStale: boolean;
+    healthIsStale: boolean;
+  }>({
+    manifestFromCache: false,
+    healthFromCache: false,
+    manifestIsStale: false,
+    healthIsStale: false
+  });
 
   useEffect(() => {
     const fetchSwapBoostData = async () => {
       try {
         const WORKER_BASE_URL = 'https://pond0x-api-proxy.pond0xdash.workers.dev';
         
-        // Fetch manifest data
-        const manifestResponse = await fetch(`${WORKER_BASE_URL}/manifest?id=${solAddress}`);
+        // Fetch manifest data with caching and retry logic
         let manifestData = {};
-        if (manifestResponse.ok) {
-          manifestData = await manifestResponse.json();
+        let manifestStatus = { fromCache: false, isStale: false };
+        try {
+          const manifestResult = await cachedFetch(`${WORKER_BASE_URL}/manifest?id=${solAddress}`);
+          manifestData = manifestResult.data;
+          manifestStatus = { fromCache: manifestResult.fromCache, isStale: manifestResult.isStale };
+          console.log('✅ Manifest data loaded:', { fromCache: manifestResult.fromCache, isStale: manifestResult.isStale });
+        } catch (error) {
+          console.error('❌ Manifest API failed completely:', error);
+          manifestData = {}; // Keep empty object as fallback
         }
 
-        // Fetch health data
-        const healthResponse = await fetch(`${WORKER_BASE_URL}/health?id=${solAddress}`);
+        // Fetch health data with caching and retry logic
         let healthData = {};
-        if (healthResponse.ok) {
-          healthData = await healthResponse.json();
+        let healthStatus = { fromCache: false, isStale: false };
+        try {
+          const healthResult = await cachedFetch(`${WORKER_BASE_URL}/health?id=${solAddress}`);
+          healthData = healthResult.data;
+          healthStatus = { fromCache: healthResult.fromCache, isStale: healthResult.isStale };
+          console.log('✅ Health data loaded:', { fromCache: healthResult.fromCache, isStale: healthResult.isStale });
+        } catch (error) {
+          console.error('❌ Health API failed completely:', error);
+          healthData = {}; // Keep empty object as fallback
         }
+
+        // Update data status for UI indicators
+        setDataStatus({
+          manifestFromCache: manifestStatus.fromCache,
+          healthFromCache: healthStatus.fromCache,
+          manifestIsStale: manifestStatus.isStale,
+          healthIsStale: healthStatus.isStale
+        });
 
         // Structure data to match original format
         const data = {
@@ -55,6 +87,12 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
         setApiData(data);
       } catch (error) {
         console.error('Error fetching swap boost data:', error);
+        // Set empty data structure so component can still render
+        setApiData({
+          pond0xData: {},
+          miningStats: { sessions: 0 },
+          healthData: { stats: {} }
+        });
       } finally {
         setLoading(false);
       }
@@ -175,6 +213,21 @@ export default function SwapBoostCalculator({ solAddress, manifestData, healthSt
           Swap/Boost Calculator
         </h3>
       </div>
+
+      {/* Data Status Warning */}
+      {(dataStatus.manifestIsStale || dataStatus.healthIsStale) && (
+        <div className="mb-4 p-3 bg-orange-100 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700/50 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+            <span className="text-sm font-medium text-orange-800 dark:text-orange-200">
+              Using cached data due to API rate limiting
+            </span>
+          </div>
+          <p className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+            Data may be up to 5 minutes old. Calculations are still accurate.
+          </p>
+        </div>
+      )}
       {/* Input Data Summary - Two Separate Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* Mining Sessions Card - BLUE for mining data */}
