@@ -154,8 +154,7 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
     mempoolCount: healthData?.in_mempool
   });
 
-  // Only show "No Mining Activity" if we have valid API data AND no activity
-  // If apiData is null (API failed), we should show an error state instead
+  // Show API error only if both APIs completely failed
   if (!apiData) {
     return (
       <motion.div 
@@ -166,33 +165,17 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
       >
         <div className="text-center">
           <Zap className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">API Error</h3>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">API Temporarily Down</h3>
           <p className="text-slate-600 dark:text-slate-400">
-            Unable to fetch mining data for this wallet address. Please try again later.
+            The pond0x.com APIs are currently down. Please try again in a few minutes.
           </p>
         </div>
       </motion.div>
     );
   }
 
-  if (!hasActiveMining && !hasMempool && !hasMiningHistory) {
-    return (
-      <motion.div 
-        className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/90 dark:to-slate-900/90 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6 shadow-lg"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="text-center">
-          <Zap className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Mining Activity</h3>
-          <p className="text-slate-600 dark:text-slate-400">
-            No mining activity found for this wallet address.
-          </p>
-        </div>
-      </motion.div>
-    );
-  }
+  // Always show the mining panel if we have API data, even if values are 0
+  // This allows users to see their wallet is being tracked
 
   // Mining session data is now derived from health APIs
   const session = null; // No longer using hardcoded session data
