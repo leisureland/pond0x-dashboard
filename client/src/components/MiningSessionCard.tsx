@@ -58,36 +58,53 @@ export function MiningSessionCard({ solAddress, stats, manifestData }: MiningSes
   useEffect(() => {
     const fetchMiningData = async () => {
       try {
-        // Use Cloudflare Worker endpoints
-        const [healthResponse, manifestResponse] = await Promise.all([
-          fetch(`https://pond0x-api-proxy.pond0xdash.workers.dev/health?id=${solAddress}`),
-          fetch(`https://pond0x-api-proxy.pond0xdash.workers.dev/manifest?id=${solAddress}`)
-        ]);
+        // Use Cloudflare Worker endpoints - fetch them separately for better error handling
+        let healthData = null;
+        let manifestData = null;
 
-        if (!healthResponse.ok || !manifestResponse.ok) {
-          throw new Error('Failed to fetch data from Cloudflare Worker');
+        // Try to fetch health data
+        try {
+          const healthResponse = await fetch(`https://pond0x-api-proxy.pond0xdash.workers.dev/health?id=${solAddress}`);
+          if (healthResponse.ok) {
+            healthData = await healthResponse.json();
+            console.log('✅ Health API response:', healthData);
+          } else {
+            console.log('⚠️ Health API failed with status:', healthResponse.status);
+          }
+        } catch (healthError) {
+          console.log('⚠️ Health API error:', healthError);
         }
 
-        const healthData = await healthResponse.json();
-        const manifestData = await manifestResponse.json();
-
-        console.log('✅ Health API response:', healthData);
-        console.log('✅ Manifest API response:', manifestData);
-
-        // Structure data to match expected format
-        const structuredData = {
-          healthData: healthData,
-          pond0xData: manifestData,
-          miningStats: {
-            hasActiveMining: healthData.stats?.mining_sessions > 0 || healthData.stats?.in_mempool > 0
+        // Try to fetch manifest data
+        try {
+          const manifestResponse = await fetch(`https://pond0x-api-proxy.pond0xdash.workers.dev/manifest?id=${solAddress}`);
+          if (manifestResponse.ok) {
+            manifestData = await manifestResponse.json();
+            console.log('✅ Manifest API response:', manifestData);
+          } else {
+            console.log('⚠️ Manifest API failed with status:', manifestResponse.status);
           }
-        };
+        } catch (manifestError) {
+          console.log('⚠️ Manifest API error:', manifestError);
+        }
 
-        setApiData(structuredData);
+        // If we have at least health data, we can show the component
+        if (healthData) {
+          const structuredData = {
+            healthData: healthData,
+            pond0xData: manifestData || {}, // Use empty object if manifest failed
+            miningStats: {
+              hasActiveMining: healthData.stats?.mining_sessions > 0 || healthData.stats?.in_mempool > 0
+            }
+          };
+          setApiData(structuredData);
+        } else {
+          // Only set to null if both APIs completely failed
+          console.log('⚠️ Both APIs failed for address:', solAddress);
+          setApiData(null);
+        }
       } catch (error) {
-        console.error('Error fetching mining data:', error);
-        // Log error for debugging but don't use fallback data
-        console.log('⚠️ API Error for address:', solAddress, error);
+        console.error('Unexpected error fetching mining data:', error);
         setApiData(null);
       } finally {
         setLoading(false);
